@@ -290,6 +290,15 @@
   }
   .session-card .panel-title{ margin-bottom:6px; }
   .session-card .sub{ margin-bottom:16px; }
+  .local-help{
+    font-size:13.5px; line-height:1.6; color:var(--muted); background:var(--surface);
+    border:1.5px solid var(--line); border-radius:var(--radius-md); padding:12px 14px; margin:10px 0 0;
+  }
+  .local-help[hidden]{ display:none; }
+  .local-help b{ color:var(--text); }
+  .local-help ol{ margin:6px 0 0; padding-left:20px; }
+  .local-help li{ margin-bottom:5px; }
+  .local-help code{ background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:12.5px; overflow-wrap:anywhere; }
   .conn-tips{ font-size:13px; color:var(--muted); line-height:1.6; margin:12px 0 0; }
   @media (max-width:640px){ .session-card{ padding:20px 16px 22px; } }
 
@@ -947,7 +956,7 @@
 
   <section class="session-card" id="sessionCard" style="--tool:#6D4AFF" aria-labelledby="sessionTitle">
     <div class="panel-title" id="sessionTitle"><span class="tool-icon" aria-hidden="true">🧠</span> Session Insights</div>
-    <p class="sub">Get an overview of the conversation above, or suggestions for the teacher. Nothing is sent until you press Generate.</p>
+    <p class="sub">Get a counseling-style session summary of the conversation above, or suggestions for the teacher, in English or Bahasa Indonesia. Nothing is sent until you press Generate.</p>
 
     <div id="connSlotTalk">
     <details class="ai-settings" open>
@@ -957,9 +966,18 @@
       <div class="field">
         <label for="providerSelect">AI provider</label>
         <select id="providerSelect">
-          <option value="openrouter" selected>OpenRouter (free DeepSeek model)</option>
-          <option value="deepseek">DeepSeek (official API)</option>
-          <option value="local">Local model (Ollama / LM Studio)</option>
+          <optgroup label="On this computer (private, free)">
+            <option value="local" selected>Ollama (Llama and other models)</option>
+            <option value="lmstudio">LM Studio</option>
+            <option value="llamacpp">llama.cpp server / llamafile</option>
+            <option value="jan">Jan</option>
+          </optgroup>
+          <optgroup label="Online (needs an API key)">
+            <option value="groq">Groq (fast Llama models)</option>
+            <option value="together">Together AI (Llama models)</option>
+            <option value="openrouter">OpenRouter (free models, incl. Llama)</option>
+            <option value="deepseek">DeepSeek (official API)</option>
+          </optgroup>
           <option value="custom">Custom OpenAI-compatible endpoint</option>
         </select>
       </div>
@@ -970,6 +988,8 @@
       <div class="field">
         <label for="modelInput">Model</label>
         <input type="text" id="modelInput" />
+        <select id="modelPick" aria-label="Quick pick a model"></select>
+        <div class="mode-hint" id="modelHint"></div>
       </div>
     </div>
     <div class="settings-grid" style="grid-template-columns:1fr;">
@@ -988,6 +1008,7 @@
       <button class="btn" id="testConnBtn">Test connection</button>
     </div>
     <div class="insights-status" id="connStatus"></div>
+    <div class="local-help" id="localHelp" hidden></div>
     <p class="conn-tips">Hit "Test connection" first if things aren't working — it checks reachability and, for a local model, tells you exactly which models Ollama actually has pulled. This calls whichever API you configure, directly from your browser — the transcript leaves your device only when you tap "Generate". Output now streams in as it's generated rather than appearing all at once. On a local CPU-only model, generation itself is still the slow part (no GPU acceleration) — the biggest speed win is a smaller model: try <code>ollama pull llama3.2:3b</code> or <code>ollama pull qwen2.5:3b</code> (both a fraction of llama3.1's size, noticeably faster, still fine quality for this task) and set the Model field to match. OpenRouter currently offers DeepSeek's chat model free of charge (model IDs change occasionally — check <code>openrouter.ai/models</code> if the default stops working) and, since it runs on real GPUs, responds in a few seconds regardless of your own hardware.</p>
     </details>
     </div>
@@ -995,11 +1016,19 @@
     <div class="mode-field">
       <label for="outputSelect">What do you want back?</label>
       <select id="outputSelect">
-        <option value="overview">Conversation overview</option>
+        <option value="overview">Session summary (counseling-style note)</option>
         <option value="suggestions" selected>Suggestions for the teacher</option>
-        <option value="both">Both — overview, then suggestions</option>
+        <option value="both">Both: session summary, then suggestions</option>
       </select>
       <div class="mode-hint" id="outputHint"></div>
+    </div>
+    <div class="mode-field">
+      <label for="insightLang">Write the insights in</label>
+      <select id="insightLang">
+        <option value="en">English</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="both">English and Bahasa Indonesia</option>
+      </select>
     </div>
 
     <div class="insights-actions">
@@ -1844,10 +1873,10 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
 
   const OUTPUT_MODES = {
     overview: {
-      button: 'Generate overview',
-      hint: 'A neutral summary of what was said: main topics, key moments, and open questions. No advice.',
-      file: 'conversation-overview.txt',
-      maxTokens: 900
+      button: 'Generate session summary',
+      hint: 'A counseling-style session note: presenting concerns, emotional presentation, strengths, themes and points to explore. It describes; it does not diagnose or advise.',
+      file: 'session-summary.txt',
+      maxTokens: 1300
     },
     suggestions: {
       button: 'Generate teaching suggestions',
@@ -1856,12 +1885,32 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
       maxTokens: 1000
     },
     both: {
-      button: 'Generate overview + suggestions',
-      hint: 'The overview first, followed by the full teaching suggestions. Takes longer, especially on a local model.',
-      file: 'overview-and-suggestions.txt',
-      maxTokens: 2000
+      button: 'Generate summary + suggestions',
+      hint: 'The session summary first, followed by the full teaching suggestions. Takes longer, especially on a local model.',
+      file: 'session-summary-and-suggestions.txt',
+      maxTokens: 2800
     }
   };
+
+  const insightLang = document.getElementById('insightLang');
+  const LANG_KEY = 'rekam-insight-lang-v1';
+  try{
+    const savedLang = localStorage.getItem(LANG_KEY);
+    if(savedLang && Array.from(insightLang.options).some(o => o.value === savedLang)){ insightLang.value = savedLang; }
+  }catch(e){ /* ignore */ }
+  insightLang.addEventListener('change', () => {
+    try{ localStorage.setItem(LANG_KEY, insightLang.value); }catch(e){ /* ignore */ }
+  });
+
+  function languageInstruction(){
+    if(insightLang.value === 'id'){
+      return '\n\nLanguage: write the whole response in natural, clear Bahasa Indonesia, in a warm and professional register suited to a school counselor. Translate the section headers too, but keep the numbering. If you must flag a risk, begin the response with the exact marker "URGENT:" (in English capitals) followed by the explanation in Bahasa Indonesia. For the combined format, keep the "===" header lines but write the words between the equals signs in Bahasa Indonesia.';
+    }
+    if(insightLang.value === 'both'){
+      return '\n\nLanguage: write the complete response first in English. Then write a line containing only "--- Bahasa Indonesia ---" and repeat the complete response in natural, clear Bahasa Indonesia. Use the "URGENT:" marker only once, at the very start of the English version, and mention the same risk in the Bahasa Indonesia version without the marker. Ignore any word limits above for this bilingual output, but keep each language version concise.';
+    }
+    return '\n\nLanguage: write the whole response in clear English.';
+  }
 
   function applyOutputMode(){
     const mode = OUTPUT_MODES[outputSelect.value] || OUTPUT_MODES.suggestions;
@@ -1882,6 +1931,40 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
   // Presets per provider. These are OpenAI-compatible chat/completions
   // endpoints, so one request shape works for all of them.
   const PROVIDER_PRESETS = {
+    local: {
+      endpoint: 'http://127.0.0.1:11434/v1/chat/completions',
+      model: 'llama3.2:3b',
+      needsKey: false,
+      local: true
+    },
+    lmstudio: {
+      endpoint: 'http://127.0.0.1:1234/v1/chat/completions',
+      model: 'llama-3.2-3b-instruct',
+      needsKey: false,
+      local: true
+    },
+    llamacpp: {
+      endpoint: 'http://127.0.0.1:8080/v1/chat/completions',
+      model: 'llama',
+      needsKey: false,
+      local: true
+    },
+    jan: {
+      endpoint: 'http://127.0.0.1:1337/v1/chat/completions',
+      model: 'llama3.2-3b-instruct',
+      needsKey: false,
+      local: true
+    },
+    groq: {
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'llama-3.3-70b-versatile',
+      needsKey: true
+    },
+    together: {
+      endpoint: 'https://api.together.xyz/v1/chat/completions',
+      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+      needsKey: true
+    },
     openrouter: {
       endpoint: 'https://openrouter.ai/api/v1/chat/completions',
       model: 'deepseek/deepseek-chat-v3.1:free',
@@ -1892,11 +1975,6 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
       model: 'deepseek-chat',
       needsKey: true
     },
-    local: {
-      endpoint: 'http://localhost:11434/v1/chat/completions',
-      model: 'llama3.1',
-      needsKey: false
-    },
     custom: {
       endpoint: '',
       model: '',
@@ -1904,12 +1982,168 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
     }
   };
 
+  // Quick-pick lists. Model names change over time, so the Model box stays editable.
+  const MODEL_CHOICES = {
+    local: [
+      { group: 'Llama models', items: [
+        ['llama3.2:1b', 'Llama 3.2 1B: tiny and very fast'],
+        ['llama3.2:3b', 'Llama 3.2 3B: fast, good for most laptops'],
+        ['llama3.1:8b', 'Llama 3.1 8B: better quality (about 8 GB of memory)'],
+        ['llama3.3:70b', 'Llama 3.3 70B: best quality (needs a powerful computer)']
+      ] },
+      { group: 'Other small models', items: [
+        ['qwen2.5:3b', 'Qwen 2.5 3B: fast, multilingual'],
+        ['qwen2.5:7b', 'Qwen 2.5 7B: multilingual, better quality'],
+        ['gemma2:2b', 'Gemma 2 2B: very small'],
+        ['mistral:7b', 'Mistral 7B'],
+        ['phi3:mini', 'Phi-3 Mini']
+      ] }
+    ],
+    lmstudio: [
+      { group: 'Llama models (use the exact name LM Studio shows)', items: [
+        ['llama-3.2-3b-instruct', 'Llama 3.2 3B Instruct'],
+        ['llama-3.2-1b-instruct', 'Llama 3.2 1B Instruct'],
+        ['meta-llama-3.1-8b-instruct', 'Llama 3.1 8B Instruct']
+      ] }
+    ],
+    llamacpp: [
+      { group: 'llama.cpp / llamafile', items: [
+        ['llama', 'Any loaded model (the name does not matter)']
+      ] }
+    ],
+    jan: [
+      { group: 'Llama models (use the model ID Jan shows)', items: [
+        ['llama3.2-3b-instruct', 'Llama 3.2 3B Instruct'],
+        ['llama3.1-8b-instruct', 'Llama 3.1 8B Instruct']
+      ] }
+    ],
+    groq: [
+      { group: 'Llama models on Groq', items: [
+        ['llama-3.3-70b-versatile', 'Llama 3.3 70B: best quality'],
+        ['llama-3.1-8b-instant', 'Llama 3.1 8B: fastest']
+      ] }
+    ],
+    together: [
+      { group: 'Llama models on Together AI', items: [
+        ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Llama 3.3 70B Turbo'],
+        ['meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo', 'Llama 3.1 8B Turbo'],
+        ['meta-llama/Llama-3.2-3B-Instruct-Turbo', 'Llama 3.2 3B Turbo']
+      ] }
+    ],
+    openrouter: [
+      { group: 'Free models (availability changes)', items: [
+        ['deepseek/deepseek-chat-v3.1:free', 'DeepSeek Chat v3.1 (free)'],
+        ['meta-llama/llama-3.3-70b-instruct:free', 'Llama 3.3 70B (free)'],
+        ['meta-llama/llama-3.2-3b-instruct:free', 'Llama 3.2 3B (free)']
+      ] }
+    ],
+    deepseek: [
+      { group: 'DeepSeek', items: [['deepseek-chat', 'DeepSeek Chat']] }
+    ],
+    custom: []
+  };
+
+  function isLocalProvider(key){ return !!(PROVIDER_PRESETS[key] && PROVIDER_PRESETS[key].local); }
+
+  const modelPick = document.getElementById('modelPick');
+  const modelHint = document.getElementById('modelHint');
+
+  function updateModelHint(){
+    const key = providerSelect.value;
+    const m = modelInput.value.trim();
+    let text = '';
+    if(key === 'local'){
+      text = m ? 'Download it once with: ollama pull ' + m : 'Pick a model, or type the name of one you have pulled.';
+    }else if(key === 'lmstudio' || key === 'jan'){
+      text = 'Use the exact model name shown in the app, then press Test connection.';
+    }else if(key === 'llamacpp'){
+      text = 'This server uses whichever model you started it with.';
+    }else if(key === 'groq' || key === 'together' || key === 'openrouter'){
+      text = 'Model names change now and then. If one stops working, pick another from the list or check the provider\'s model page.';
+    }
+    modelHint.textContent = text;
+    modelHint.hidden = !text;
+  }
+
+  function syncModelPick(){
+    const v = modelInput.value.trim();
+    modelPick.value = Array.from(modelPick.options).some(o => o.value === v) ? v : '';
+    updateModelHint();
+  }
+
+  function renderModelPick(){
+    const groups = MODEL_CHOICES[providerSelect.value] || [];
+    modelPick.hidden = groups.length === 0;
+    modelPick.innerHTML = '<option value="">Quick pick a model…</option>' + groups.map(g =>
+      '<optgroup label="' + g.group + '">' + g.items.map(it => '<option value="' + it[0] + '">' + it[1] + '</option>').join('') + '</optgroup>').join('');
+    syncModelPick();
+  }
+
+  modelPick.addEventListener('change', () => {
+    if(modelPick.value){ modelInput.value = modelPick.value; }
+    updateModelHint();
+  });
+  modelInput.addEventListener('input', syncModelPick);
+
+  function siteOrigin(){
+    return /^https?:$/.test(location.protocol) ? location.origin : 'https://your-website-address';
+  }
+
+  const localHelp = document.getElementById('localHelp');
+  function renderLocalHelp(){
+    const key = providerSelect.value;
+    const o = siteOrigin().replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const noLocal = '<p style="margin:8px 0 0;"><b>No local AI on this computer?</b> Choose <b>Groq</b> or <b>OpenRouter</b> in the AI provider list and paste a free API key from <code>console.groq.com</code> or <code>openrouter.ai</code>.</p>';
+    if(key === 'local'){
+      localHelp.innerHTML =
+        '<b>Using Llama and other models on this computer (Ollama)</b>' +
+        '<ol>' +
+        '<li>Install Ollama from <code>ollama.com</code> and open it.</li>' +
+        '<li>In a terminal, run <code>ollama pull llama3.2:3b</code>. Want a different Llama? Choose it in "Quick pick a model", then run <code>ollama pull</code> with that name. Bigger models write better but run slower.</li>' +
+        '<li>Let this website talk to Ollama. <b>Windows:</b> run <code>setx OLLAMA_ORIGINS "' + o + '"</code>, then quit Ollama from the tray and reopen it. ' +
+        '<b>Mac:</b> run <code>launchctl setenv OLLAMA_ORIGINS "' + o + '"</code>, then quit and reopen Ollama. ' +
+        '<b>Linux:</b> run <code>sudo systemctl edit ollama</code>, add <code>Environment="OLLAMA_ORIGINS=' + o + '"</code> under <code>[Service]</code>, then <code>sudo systemctl restart ollama</code>.</li>' +
+        '<li>If your browser asks to allow access to devices on your local network, choose Allow. Safari may block this, so use Chrome, Edge or Firefox.</li>' +
+        '</ol>' + noLocal;
+    }else if(key === 'lmstudio'){
+      localHelp.innerHTML =
+        '<b>Using LM Studio on this computer</b>' +
+        '<ol>' +
+        '<li>Install LM Studio from <code>lmstudio.ai</code> and download a Llama model, for example <b>Llama 3.2 3B Instruct</b>.</li>' +
+        '<li>Open the <b>Developer</b> tab, load the model and start the local server (default address <code>http://127.0.0.1:1234</code>).</li>' +
+        '<li>In the server settings, turn on <b>Enable CORS</b> so this website is allowed to talk to it, then restart the server.</li>' +
+        '<li>Set the Model field to the exact name LM Studio shows, then press <b>Test connection</b>.</li>' +
+        '</ol>' + noLocal;
+    }else if(key === 'llamacpp'){
+      localHelp.innerHTML =
+        '<b>Using a llama.cpp server or llamafile</b>' +
+        '<ol>' +
+        '<li>Download a Llama model in GGUF format (for example Llama 3.2 3B Instruct) and the llama.cpp release for your system from <code>github.com/ggml-org/llama.cpp</code>.</li>' +
+        '<li>Start the server: <code>llama-server -m your-model.gguf --port 8080</code></li>' +
+        '<li>The model name does not matter for this server. Press <b>Test connection</b>. If the browser says it cannot reach the server, check that your build allows cross-origin requests (CORS).</li>' +
+        '</ol>' + noLocal;
+    }else if(key === 'jan'){
+      localHelp.innerHTML =
+        '<b>Using Jan on this computer</b>' +
+        '<ol>' +
+        '<li>Install Jan from <code>jan.ai</code> and download a Llama model from its Hub, for example Llama 3.2 3B Instruct.</li>' +
+        '<li>In Jan\'s settings, turn on the <b>Local API Server</b> (default address <code>http://127.0.0.1:1337</code>) and allow cross-origin requests (CORS) if that setting is there.</li>' +
+        '<li>Set the Model field to the model ID shown in Jan, then press <b>Test connection</b>.</li>' +
+        '</ol>' + noLocal;
+    }else{
+      localHelp.innerHTML = '';
+    }
+  }
+
   function applyPreset(providerKey, { keepUserEdits } = {}){
     const preset = PROVIDER_PRESETS[providerKey];
     if(!preset) return;
     if(!keepUserEdits || !endpointInput.value){ endpointInput.value = preset.endpoint; }
     if(!keepUserEdits || !modelInput.value){ modelInput.value = preset.model; }
     apiKeyField.style.display = preset.needsKey ? '' : 'none';
+    localHelp.hidden = !preset.local;
+    renderLocalHelp();
+    renderModelPick();
   }
 
   function loadSavedSettings(){
@@ -1923,6 +2157,7 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
       if(saved.model){ modelInput.value = saved.model; }
       if(saved.apiKey){ apiKeyInput.value = saved.apiKey; }
       rememberKey.checked = true;
+      syncModelPick();
       return true;
     }catch(e){
       return false;
@@ -1979,27 +2214,30 @@ Respond with these sections, using plain text with short headers (no markdown sy
 
 Do not invent details that aren't in the transcript. Section 3 and section 4 are the most important — make sure they land on this specific student's actual situation. Keep the whole response under 650 words.`;
 
-  const OVERVIEW_BODY = `1. In a nutshell — 2-3 sentences on what the conversation was about and how it went.
-2. Main topics — a short list of the topics in the order they came up (one line each).
-3. Key points and moments — what each speaker said or asked that matters, with specific details from the transcript, plus any noticeable shift in tone or mood. Paraphrase briefly rather than quoting long stretches.
-4. Open questions — anything left unresolved, unclear, or worth following up on, stated as questions, not as advice.`;
+  const OVERVIEW_BODY = `1. Session overview — 2-3 sentences: who took part, what the session was about, and how it went overall.
+2. Presenting concerns — the main concern(s) or topics the student brought, in the student's own framing, as short lines.
+3. Session content — a concise account of what was explored, in the order it happened, with the key statements paraphrased and what the counselor or teacher asked or reflected back.
+4. Emotional presentation — the feelings expressed or implied by the student's words (for example worried, relieved, frustrated), how the tone shifted during the session, and how open and engaged the student seemed. Base this ONLY on the transcript and say in one short sentence that body language, voice and facial expression cannot be observed from text.
+5. Strengths and coping resources — what the student is already doing well, supports they mentioned (people, activities, routines), and any helpful insight they voiced.
+6. Themes and patterns — ideas, beliefs or situations that came up more than once, described neutrally.
+7. Points to explore next session — 3-4 open questions or topics worth returning to, written as questions only, with no advice.`;
 
-  const OVERVIEW_PROMPT = `You are a careful, neutral note-taker summarizing a spoken session between a teacher/counselor and one or more students. You'll get a transcript (already translated into English).
+  const OVERVIEW_PROMPT = `You are an experienced school counselor writing a confidential session summary in the style of a counseling or psychological session record. You'll get a transcript (already translated into English) of a session between a counselor or teacher and one or more students.
 
-Write a clear overview of the conversation in plain everyday words. Describe what was said; do NOT give advice, recommendations, or interpretations of the student's psychology. Do not invent details that aren't in the transcript. Use plain text with short headers (no markdown symbols):
+Write in professional, neutral, non-judgmental language and plain text with short numbered headers (no markdown symbols). Describe what was said and observed. Do NOT diagnose, name disorders, or recommend treatment, and do not give advice here. Use tentative wording for anything inferred ("seems", "may suggest", "the student described feeling"). Refer to the student by role ("the student") unless a name appears in the transcript, and identify each speaker's role. Never invent details that are not in the transcript.
 
 ${OVERVIEW_BODY}
-5. Safety check — one sentence stating whether anything in the conversation points to a risk to a student's safety or wellbeing. If yes, put the single line "URGENT: " plus a one-sentence reason at the very start of your whole response, before section 1.
+8. Risk and safety screen — one or two sentences stating whether anything in the session points to a risk to anyone's safety or wellbeing (for example self-harm, harm to others, abuse, or severe distress). If yes, put the single line "URGENT: " plus a one-sentence reason at the very start of your whole response, before section 1.
 
-Keep the whole response under 350 words.`;
+Keep the whole response under 450 words.`;
 
-  const BOTH_PROMPT = `You will write a two-part reply for a teacher after a spoken session with a student. You'll get a transcript (already translated into English).
+  const BOTH_PROMPT = `You will write a two-part reply for a counselor or teacher after a spoken session with a student. You'll get a transcript (already translated into English).
 
-Structure: Part 1 starts with the exact header line "=== CONVERSATION OVERVIEW ===". Part 2 starts with the exact header line "=== TEACHING SUGGESTIONS ===". If anything suggests risk to the student's safety, the single "URGENT: " line goes at the very start of the whole reply, before Part 1 (see Part 2's escalation instructions).
+Structure: Part 1 starts with the exact header line "=== SESSION SUMMARY ===". Part 2 starts with the exact header line "=== TEACHING SUGGESTIONS ===". If anything suggests risk to the student's safety, the single "URGENT: " line goes at the very start of the whole reply, before Part 1 (see Part 2's escalation instructions).
 
-PART 1 — CONVERSATION OVERVIEW. A neutral summary of what was said, with NO advice. Plain text, short headers, no markdown symbols. Do not invent details. Sections:
+PART 1 — SESSION SUMMARY. A confidential counseling-style session note. Professional, neutral, non-judgmental plain text with short numbered headers and no markdown symbols. Describe what was said and observed; do NOT diagnose or give advice in this part. Use tentative wording for inferences, refer to the student by role, and do not invent details. Sections:
 ${OVERVIEW_BODY}
-Keep Part 1 under 300 words.
+Keep Part 1 under 450 words.
 
 PART 2 — TEACHING SUGGESTIONS. Follow these instructions in full (ignore the word limit stated inside them; keep Part 2 under 650 words):
 
@@ -2022,6 +2260,7 @@ ${SUGGESTIONS_PROMPT}`;
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const withHeaders = escaped
       .replace(/^(={3}[^\n]+={3})/gm, '<strong>$1</strong>')
+      .replace(/^(-{3}[^\n]+-{3})$/gm, '<strong>$1</strong>')
       .replace(/^(\d\.\s[^\n]+)/gm, '<strong>$1</strong>');
     insightsOutput.innerHTML = withHeaders;
   }
@@ -2042,6 +2281,28 @@ ${SUGGESTIONS_PROMPT}`;
   // Turns a raw fetch/response failure into a specific, actionable message
   // instead of a generic "failed to fetch" — this is the single biggest
   // source of confusion when wiring up a local or third-party model.
+  function localFailureHelp(endpoint){
+    const key = providerSelect.value;
+    const names = { lmstudio: 'LM Studio', llamacpp: 'the llama.cpp server', jan: 'Jan' };
+    const name = names[key] || 'the local AI server';
+    const steps = {
+      lmstudio: '  1) LM Studio\'s local server isn\'t running: open the Developer tab, load a model and start the server.\n'
+        + '  2) Turn on "Enable CORS" in the server settings, then restart the server, so this website is allowed to connect.\n'
+        + '  3) The port may be different: check the address LM Studio shows and put it in the API endpoint box.\n'
+        + '  4) The Model field must match the model name LM Studio shows.\n',
+      llamacpp: '  1) The server isn\'t running: start it with  llama-server -m your-model.gguf --port 8080\n'
+        + '  2) The port may be different: put the one you used in the API endpoint box.\n'
+        + '  3) Your build may not allow cross-origin requests (CORS) from a website. Try a recent llama.cpp release.\n',
+      jan: '  1) Jan\'s Local API Server isn\'t switched on: open Jan\'s settings and turn it on.\n'
+        + '  2) Allow cross-origin requests (CORS) if Jan has that setting.\n'
+        + '  3) The port may be different: put the one Jan shows in the API endpoint box.\n'
+        + '  4) The Model field must match the model ID shown in Jan.\n'
+    };
+    return 'Could not reach ' + endpoint + '.\n\nMost likely causes with ' + name + ':\n' + (steps[key] || '')
+      + '  Also: 127.0.0.1 always means the computer you are using, so this only works where ' + name + ' is running. Choose Groq or OpenRouter in the AI provider list and paste a free API key instead.\n\n'
+      + 'Use "Test connection" above after each fix.';
+  }
+
   function diagnoseError(err, { endpoint, isLocal } = {}){
     const msg = (err && err.message) || String(err);
 
@@ -2049,14 +2310,17 @@ ${SUGGESTIONS_PROMPT}`;
     // request never reached a server: wrong URL, server not running,
     // CORS rejection, or mixed-content blocking.
     if(err instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(msg)){
+      if(isLocal && providerSelect.value !== 'local'){
+        return localFailureHelp(endpoint);
+      }
       if(isLocal){
         return 'Could not reach ' + endpoint + '.\n\nMost likely causes:\n'
           + '  1) Ollama isn\'t running — check for the llama icon in your system tray.\n'
           + '  2) Nothing is pulled yet, or the port is different — open a terminal and run: ollama list\n'
           + '  3) The Model field doesn\'t match a model you\'ve pulled — names must match exactly, including any ":tag".\n'
-          + '  4) Older Ollama versions block browser requests by default — run this in a terminal, then restart Ollama:\n'
-          + '     setx OLLAMA_ORIGINS "*"   (then quit Ollama from the tray and reopen it)\n\n'
-          + 'Use "Test connection" above after each fix — it checks these directly.';
+          + '  4) Ollama must be told to allow this website. Set OLLAMA_ORIGINS to ' + siteOrigin() + ' (Windows: setx OLLAMA_ORIGINS \"' + siteOrigin() + '\", then quit Ollama from the tray and reopen it). Mac and Linux steps are listed under \"Connect your AI\".\n'
+          + '  5) No Ollama on this computer? The address 127.0.0.1 always means the computer you are using, so this only works where Ollama is installed. Choose OpenRouter in the AI provider list and paste a free key from openrouter.ai instead.\n\n'
+          + 'Use \"Test connection\" above after each fix — it checks these directly.';
       }
       return 'Could not reach ' + endpoint + ' at all (request never got a response). This is usually a network block, an ad-blocker/extension, or the URL being wrong — double-check the endpoint field.';
     }
@@ -2151,7 +2415,8 @@ ${SUGGESTIONS_PROMPT}`;
     const endpoint = endpointInput.value.trim();
     const model = modelInput.value.trim();
     const apiKey = apiKeyInput.value.trim();
-    const isLocal = providerSelect.value === 'local';
+    const isLocal = isLocalProvider(providerSelect.value);
+    const isOllama = providerSelect.value === 'local';
     if(!endpoint){
       setConnStatus('Fill in an API endpoint first.', 'err');
       return;
@@ -2163,7 +2428,7 @@ ${SUGGESTIONS_PROMPT}`;
     // Step 1 (local only): hit Ollama's native /api/tags to list what's
     // actually pulled, so a model-name mismatch is caught before we even
     // try a chat request.
-    if(isLocal){
+    if(isOllama){
       try{
         const origin = new URL(endpoint).origin;
         const tagsRes = await fetch(origin + '/api/tags');
@@ -2175,7 +2440,7 @@ ${SUGGESTIONS_PROMPT}`;
             testConnBtn.disabled = false;
             return;
           }
-          if(model && !names.includes(model)){
+          if(model && !names.includes(model) && !names.includes(model + ':latest')){
             setConnStatus('Reached Ollama ✓ — but "' + model + '" isn\'t in your pulled models.\nAvailable: ' + names.join(', ') + '\nEither pull it (ollama pull ' + model + ') or change the Model field to one of the above.', 'err');
             testConnBtn.disabled = false;
             return;
@@ -2185,6 +2450,25 @@ ${SUGGESTIONS_PROMPT}`;
         // If /api/tags itself is unreachable, the chat-completions call
         // below will fail the same way and produce the same diagnosis —
         // no need to short-circuit here.
+      }
+    }
+
+    // Other local servers (LM Studio, Jan): list their models through the standard /v1/models call.
+    if(isLocal && !isOllama && providerSelect.value !== 'llamacpp'){
+      try{
+        const origin = new URL(endpoint).origin;
+        const listRes = await fetch(origin + '/v1/models');
+        if(listRes.ok){
+          const listData = await listRes.json();
+          const ids = (listData.data || []).map(m => m.id).filter(Boolean);
+          if(ids.length && model && !ids.includes(model)){
+            setConnStatus('Reached the server ✓, but "' + model + '" isn\'t one of its models.\nAvailable: ' + ids.join(', ') + '\nChange the Model field to one of these.', 'err');
+            testConnBtn.disabled = false;
+            return;
+          }
+        }
+      }catch(e){
+        // the chat request below will report any real connection problem
       }
     }
 
@@ -2226,7 +2510,7 @@ ${SUGGESTIONS_PROMPT}`;
     saveSettingsIfRequested();
 
     const outputMode = OUTPUT_MODES[outputSelect.value] || OUTPUT_MODES.suggestions;
-    const activePrompt = PROMPTS[outputSelect.value] || SUGGESTIONS_PROMPT;
+    const activePrompt = (PROMPTS[outputSelect.value] || SUGGESTIONS_PROMPT) + languageInstruction();
 
     generateBtn.disabled = true;
     urgentBanner.classList.remove('show');
@@ -2237,7 +2521,7 @@ ${SUGGESTIONS_PROMPT}`;
       const startedAt = Date.now();
       const reply = await callChatCompletionsStreaming({
         endpoint, model, apiKey,
-        maxTokens: outputMode.maxTokens,
+        maxTokens: Math.min(4000, Math.round(outputMode.maxTokens * (insightLang.value === 'both' ? 1.8 : 1))),
         messages: [
           { role: 'system', content: activePrompt },
           { role: 'user', content: 'Transcript:\n\n' + transcript }
@@ -2253,7 +2537,8 @@ ${SUGGESTIONS_PROMPT}`;
       if(/^URGENT:/i.test(reply.trim())){
         const firstLineBreak = reply.indexOf('\n');
         const urgentLine = firstLineBreak === -1 ? reply : reply.slice(0, firstLineBreak);
-        urgentBanner.innerHTML = '<b>' + urgentLine.replace(/^URGENT:\s*/i, 'URGENT — ') + '</b> Follow your school\'s safeguarding procedure regardless of anything else this tool suggests.';
+        const followUp = insightLang.value === 'id' ? 'Ikuti prosedur perlindungan (safeguarding) sekolah Anda, apa pun saran lain dari alat ini.' : 'Follow your school\'s safeguarding procedure regardless of anything else this tool suggests.';
+        urgentBanner.innerHTML = '<b>' + urgentLine.replace(/^URGENT:\s*/i, 'URGENT — ') + '</b> ' + followUp;
         urgentBanner.classList.add('show');
         toShow = firstLineBreak === -1 ? '' : reply.slice(firstLineBreak).trim();
       }
@@ -2263,7 +2548,7 @@ ${SUGGESTIONS_PROMPT}`;
     }catch(err){
       console.error('Insights request failed:', err);
       insightsOutput.innerHTML = '<span class="placeholder">Request failed.</span>';
-      setInsightsStatus(diagnoseError(err, { endpoint, isLocal: providerSelect.value === 'local' }), 'err');
+      setInsightsStatus(diagnoseError(err, { endpoint, isLocal: isLocalProvider(providerSelect.value) }), 'err');
     }finally{
       generateBtn.disabled = false;
     }
@@ -3096,7 +3381,7 @@ Rules:
         input.value = text;
         autosize();
         if(!convo.length){ suggest.hidden = false; }
-        setSt(diagnoseError(err, { endpoint: cfg.endpoint, isLocal: providerSelect.value === 'local' }), 'err');
+        setSt(diagnoseError(err, { endpoint: cfg.endpoint, isLocal: isLocalProvider(providerSelect.value) }), 'err');
       }finally{
         busy = false;
         sendBtn.disabled = false;
@@ -3263,7 +3548,7 @@ Rules:
       }catch(err){
         console.error(tool.title + ' request failed:', err);
         outEl.innerHTML = '<span class="placeholder">Request failed.</span>';
-        setSt(diagnoseError(err, { endpoint: cfg.endpoint, isLocal: providerSelect.value === 'local' }), 'err');
+        setSt(diagnoseError(err, { endpoint: cfg.endpoint, isLocal: isLocalProvider(providerSelect.value) }), 'err');
       }finally{
         goBtn.disabled = false;
       }
