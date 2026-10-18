@@ -3,52 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tutur · Speak, translate, teach</title>
+<title>Tutor · Speak, translate, teach</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#EEF3FB;
+    --bg:#F7F5FC;
     --surface:#FFFFFF;
-    --surface-2:#F4F7FD;
-    --line:#D8E1F1;
-    --text:#14203D;
-    --muted:#5B6987;
-    --primary:#2F5BFF;
+    --surface-2:#F4F1FB;
+    --line:#E3DDF3;
+    --text:#1F1735;
+    --muted:#6A6286;
+    --primary:#6B3FD9;
+    --primary-strong:#4F26B8;
+    --primary-soft:#F0EAFF;
     --primary-ink:#FFFFFF;
-    --live:#FF4D5E;
-    --en:#0B7A75;
-    --en-bg:#E4F6F4;
-    --hero:#16224A;
-    --hero-2:#223268;
-    --warn-bg:#FFF1F2;
-    --radius-lg:22px;
-    --radius-md:14px;
+    --brand:#3B1478;
+    --live:#E5484D;
+    --en:#0F766E;
+    --en-bg:#E6F4F1;
+    --hero:#2E1065;
+    --hero-2:#3F1B8A;
+    --warn-bg:#FEF1F2;
+    --radius-lg:16px;
+    --radius-md:12px;
     --radius-sm:10px;
-    --shadow:0 1px 2px rgba(20,32,61,.06), 0 6px 18px rgba(20,32,61,.06);
-    --font-display:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;
+    --shadow:0 1px 2px rgba(31,23,53,.05), 0 4px 14px rgba(31,23,53,.06);
+    --font-display:'Figtree','Avenir Next','Segoe UI',system-ui,sans-serif;
     --font-body:'Figtree','Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#0D1427;
-      --surface:#16203A;
-      --surface-2:#1C2848;
-      --line:#2A3A63;
-      --text:#EAF0FF;
-      --muted:#9FB0D6;
-      --primary:#6D8DFF;
-      --primary-ink:#0D1427;
-      --en:#5EE0D6;
-      --en-bg:#12302F;
-      --hero:#1C2A59;
-      --hero-2:#26376F;
+      --bg:#130F22;
+      --surface:#1C1632;
+      --surface-2:#251D42;
+      --line:#372C5E;
+      --text:#F0EBFF;
+      --muted:#A79FC8;
+      --primary:#B49CFF;
+      --primary-strong:#CDBDFF;
+      --primary-soft:#2D2252;
+      --primary-ink:#1C1632;
+      --brand:#7C4DFF;
+      --live:#FF6B70;
+      --en:#5EE0D0;
+      --en-bg:#10302D;
+      --hero:#2A1A5C;
+      --hero-2:#38257A;
       --warn-bg:#3A1A24;
       --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
     }
-    .insights-output strong{ color:color-mix(in srgb, var(--tool, var(--primary)) 45%, #fff); }
+    .insights-output strong{ color:color-mix(in srgb, var(--brand) 45%, #fff); }
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -312,7 +319,7 @@
   .msg-wrap.user{ align-self:flex-end; align-items:flex-end; }
   .msg-wrap.tari{ align-self:flex-start; align-items:flex-start; }
   .msg{ padding:12px 15px; border-radius:18px; line-height:1.65; font-size:16px; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .msg.user{ background:var(--tool, var(--primary)); color:#fff; border-bottom-right-radius:6px; }
+  .msg.user{ background:var(--brand); color:#fff; border-bottom-right-radius:6px; }
   .msg.tari{ background:var(--surface); border:1.5px solid var(--line); border-bottom-left-radius:6px; }
   .msg.pending{ color:var(--muted); font-style:italic; }
   .msg-copy{ background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; padding:4px 6px; margin-top:2px; border-radius:6px; }
@@ -325,7 +332,7 @@
     background:var(--surface); color:var(--text); border:1.5px solid var(--line);
     border-radius:var(--radius-md); padding:13px 14px; font-size:16px;
   }
-  .chat-form textarea:focus{ outline:none; border-color:var(--tool, var(--primary)); box-shadow:0 0 0 3px color-mix(in srgb, var(--tool, var(--primary)) 22%, transparent); }
+  .chat-form textarea:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
   .chat-form .btn.primary{ height:54px; }
   @media (max-width:640px){ .msg-wrap{ max-width:94%; } .chat-log{ max-height:50vh; } }
 
@@ -355,7 +362,6 @@
   #toolHome[hidden]{ display:none; }
 
   @media (max-width:760px){
-    .topbar{ flex-wrap:wrap; row-gap:10px; }
     .main-nav{ order:3; width:100%; margin-left:0; }
     .nav-btn{ flex:1; padding:10px 8px; font-size:14.5px; }
     .user-chip{ order:2; margin-left:auto !important; width:auto !important; }
@@ -408,21 +414,21 @@
     background:var(--live);
     cursor:pointer;
     display:flex;align-items:center;justify-content:center;
-    box-shadow:0 8px 0 rgba(0,0,0,.22);
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
     transition:transform .12s ease, box-shadow .12s ease, background .2s ease;
   }
   .mic-btn svg{ width:40px;height:40px; stroke:#fff; }
-  .mic-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 0 rgba(0,0,0,.22); }
-  .mic-btn:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(0,0,0,.22); }
+  .mic-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 28px rgba(0,0,0,.34); }
+  .mic-btn:active{ transform:translateY(6px); box-shadow:0 4px 12px rgba(0,0,0,.3); }
   .mic-btn.recording{
     background:#fff;
     animation:pulseRing 1.6s ease-out infinite;
   }
   .mic-btn.recording svg{ stroke:var(--live); }
   @keyframes pulseRing{
-    0%{ box-shadow:0 0 0 0 rgba(255,255,255,.55), 0 8px 0 rgba(0,0,0,.22); }
-    70%{ box-shadow:0 0 0 26px rgba(255,255,255,0), 0 8px 0 rgba(0,0,0,.22); }
-    100%{ box-shadow:0 0 0 0 rgba(255,255,255,0), 0 8px 0 rgba(0,0,0,.22); }
+    0%{ box-shadow:0 0 0 0 rgba(255,255,255,.55), 0 8px 24px rgba(0,0,0,.3); }
+    70%{ box-shadow:0 0 0 26px rgba(255,255,255,0), 0 8px 24px rgba(0,0,0,.3); }
+    100%{ box-shadow:0 0 0 0 rgba(255,255,255,0), 0 8px 24px rgba(0,0,0,.3); }
   }
 
   .waveform{ display:flex; align-items:center; gap:4px; height:34px; }
@@ -557,8 +563,8 @@
   .btn:active{ transform:scale(0.97); }
   .btn.warn:hover{ border-color:var(--live); color:var(--live); }
   .btn.primary{
-    background:var(--tool, var(--primary));
-    border-color:var(--tool, var(--primary));
+    background:var(--brand);
+    border-color:var(--brand);
     color:#fff;
     padding:12px 24px;
     box-shadow:0 4px 0 rgba(0,0,0,.2);
@@ -617,7 +623,7 @@
   }
   .settings-grid input:focus, .settings-grid select:focus,
   .tool-form input:focus, .tool-form select:focus, .tool-form textarea:focus, .mode-field select:focus{
-    outline:none; border-color:var(--tool, var(--primary)); box-shadow:0 0 0 3px color-mix(in srgb, var(--tool, var(--primary)) 22%, transparent);
+    outline:none; border-color:var(--brand); box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
   }
   @media (max-width:640px){ .settings-grid{ grid-template-columns:1fr; } }
 
@@ -651,7 +657,7 @@
     background:var(--surface-2); color:var(--text); border:1.5px solid var(--line);
     border-radius:999px; padding:8px 14px; font-size:14.5px; font-weight:600; cursor:pointer;
   }
-  .back-btn:hover{ border-color:var(--tool, var(--primary)); }
+  .back-btn:hover{ border-color:var(--brand); }
   .panel-title{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-size:22px; font-weight:700; letter-spacing:-0.01em; }
   .panel-title .tool-icon{ width:40px; height:40px; font-size:21px; background:color-mix(in srgb, var(--tool) 16%, var(--surface)); }
 
@@ -660,7 +666,7 @@
   .tool-form .req{ color:var(--live); }
   .tool-form textarea{ min-height:130px; resize:vertical; line-height:1.55; }
   .tool-check{ display:flex; align-items:flex-start; gap:10px; font-size:14.5px; color:var(--muted); line-height:1.5; margin:0 0 16px; }
-  .tool-check input{ accent-color:var(--tool, var(--primary)); margin-top:3px; width:18px; height:18px; flex:none; }
+  .tool-check input{ accent-color:var(--brand); margin-top:3px; width:18px; height:18px; flex:none; }
   @media (max-width:640px){ .tool-form{ grid-template-columns:1fr; } }
 
   .mode-field{ margin-bottom:16px; }
@@ -692,7 +698,7 @@
   .insights-output{
     background:var(--surface-2);
     border:1.5px solid var(--line);
-    border-left:6px solid var(--tool, var(--primary));
+    border-left:6px solid var(--brand);
     border-radius:var(--radius-md);
     padding:18px 20px;
     font-size:16px;
@@ -702,7 +708,7 @@
     min-height:70px;
   }
   .insights-output .placeholder{ color:var(--muted); font-style:italic; }
-  .insights-output strong{ color:var(--tool, var(--primary)); }
+  .insights-output strong{ color:var(--brand); }
 
   .insights-footnote{ margin-top:16px; font-size:13px; color:var(--muted); line-height:1.6; }
 
@@ -719,6 +725,49 @@
     .waveform.active span{ animation:none; height:20px; }
     .tool-card, .btn, .mic-btn{ transition:none; }
   }
+  /* ===== professional theme ===== */
+  body.locked .topbar{ display:none; }
+  body{ padding:0 0 64px; }
+  .app{ padding:22px clamp(14px, 3vw, 40px) 0; }
+  .topbar{
+    position:sticky; top:0; z-index:30; display:block; width:100%; align-self:stretch;
+    padding:0; margin:0; background:var(--surface); border-bottom:1px solid var(--line);
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  .topbar-inner{
+    max-width:1480px; margin:0 auto; padding:11px clamp(14px, 3vw, 40px);
+    display:flex; align-items:center; gap:14px;
+  }
+  .brand h1{ font-size:24px; font-weight:800; }
+  .brand .logo{ width:40px; height:40px; }
+  .tagline{ font-size:12.5px; margin-top:2px; }
+  .main-nav{ background:none; border:none; padding:0; margin-left:18px; gap:4px; }
+  .nav-btn{ border-radius:10px; padding:9px 14px; }
+  .nav-btn:hover{ background:var(--surface-2); color:var(--text); }
+  .nav-btn.active, .nav-btn.active:hover{ background:var(--primary-soft); color:var(--primary-strong); }
+  .btn, .back-btn, .next-btn{ border-radius:var(--radius-sm); }
+  .btn.primary{ background:var(--brand); border-color:var(--brand); color:#fff; box-shadow:none; }
+  .btn.primary:active{ transform:scale(.98); box-shadow:none; }
+  .tool-search{ border-radius:var(--radius-md); }
+  .tool-card{ box-shadow:none; }
+  .tool-card:hover{ border-color:var(--primary); box-shadow:0 6px 18px rgba(59,20,120,.12); }
+  .tool-card.featured:hover{ border-color:transparent; box-shadow:0 10px 24px rgba(46,16,101,.35); }
+  .tool-icon{ border-radius:10px; }
+  .mic-btn:hover{ transform:translateY(-1px); }
+  .mic-btn:active{ transform:scale(.97); }
+  .auth-submit{ background:var(--brand); border-radius:var(--radius-sm); color:#fff; }
+  .auth-submit:hover{ filter:brightness(1.12); }
+  .google-btn{ background:var(--primary-soft); border-color:transparent; color:var(--primary-strong); }
+  .google-btn:hover{ background:color-mix(in srgb, var(--primary) 16%, var(--surface)); border-color:transparent; }
+  .gate-card h1{ font-weight:800; font-size:34px; letter-spacing:-0.02em; }
+  .gate-card{ box-shadow:var(--shadow); }
+  .user-chip{ border-radius:12px; }
+  .insights h2{ font-weight:800; }
+  @media (max-width:760px){
+    .topbar-inner{ flex-wrap:wrap; row-gap:8px; }
+    .main-nav{ margin-left:0; width:100%; }
+    .nav-btn{ flex:1; }
+  }
 </style>
 </head>
 <body class="locked">
@@ -727,11 +776,11 @@
   <div class="gate-card">
     <div class="gate-brand">
       <svg class="logo" viewBox="0 0 56 56" aria-hidden="true">
-        <rect width="56" height="56" rx="16" fill="#0E1737"/>
+        <rect width="56" height="56" rx="16" fill="#1E0A45"/>
         <path d="M10 14h22a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-7 6v-6h-3a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFD23F"/>
         <path d="M46 24H28a4 4 0 0 0-4 4v9a4 4 0 0 0 4 4h8l7 5v-5h3a4 4 0 0 0 4-4v-9a4 4 0 0 0-4-4z" fill="#4DE0C5" fill-opacity=".95"/>
       </svg>
-      <div class="gate-brand-name">Tutur</div>
+      <div class="gate-brand-name">Tutor</div>
       <div class="gate-brand-tag">Speak. Translate. Teach.</div>
       <ul class="gate-points">
         <li><span aria-hidden="true">🎙️</span> Record or type a conversation and get an instant English translation.</li>
@@ -741,12 +790,12 @@
     </div>
     <div class="gate-main">
     <svg class="logo" viewBox="0 0 56 56" aria-hidden="true">
-      <rect width="56" height="56" rx="16" fill="#16224A"/>
+      <rect width="56" height="56" rx="16" fill="#2E1065"/>
       <path d="M10 14h22a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-7 6v-6h-3a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFD23F"/>
       <path d="M46 24H28a4 4 0 0 0-4 4v9a4 4 0 0 0 4 4h8l7 5v-5h3a4 4 0 0 0 4-4v-9a4 4 0 0 0-4-4z" fill="#4DE0C5" fill-opacity=".95"/>
     </svg>
     <h1 id="gateTitle">Sign in</h1>
-    <p id="gateSub">Welcome back to Tutur.</p>
+    <p id="gateSub">Welcome back to Tutor.</p>
 
     <form id="authForm" novalidate>
       <div class="auth-field" id="nameField" hidden>
@@ -786,12 +835,12 @@
       <p class="modal-lead">Google needs to know about this website before it can sign anyone in. It is free and takes about 5 minutes.</p>
       <ol class="modal-steps">
         <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console, Credentials</a> and sign in. Create a project if it asks.</li>
-        <li>If asked, set up the <b>OAuth consent screen</b> first: choose <b>External</b>, enter the app name <b>Tutur</b> and your email. While the app is in <b>Testing</b>, only Gmail addresses added under <b>Test users</b> can sign in. Click <b>Publish app</b> to let anyone in.</li>
+        <li>If asked, set up the <b>OAuth consent screen</b> first: choose <b>External</b>, enter the app name <b>Tutor</b> and your email. While the app is in <b>Testing</b>, only Gmail addresses added under <b>Test users</b> can sign in. Click <b>Publish app</b> to let anyone in.</li>
         <li>Click <b>Create credentials</b>, then <b>OAuth client ID</b>, and choose <b>Web application</b>.</li>
         <li>Under <b>Authorized JavaScript origins</b>, add this address exactly: <code id="originValue"></code></li>
         <li>Click <b>Create</b>, copy the <b>Client ID</b> (it ends in <code>.apps.googleusercontent.com</code>) and paste it below.</li>
       </ol>
-      <p class="modal-note" id="fileNote" hidden><b>This page is open as a file.</b> Google only works from a web address. To test on your computer, open a terminal in this folder, run <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/tutur.html</code> and use <code>http://localhost:8000</code> as the origin in step 4. For everyone else, put the file on any https website.</p>
+      <p class="modal-note" id="fileNote" hidden><b>This page is open as a file.</b> Google only works from a web address. To test on your computer, open a terminal in this folder, run <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/tutor.html</code> and use <code>http://localhost:8000</code> as the origin in step 4. For everyone else, put the file on any https website.</p>
       <div class="auth-field">
         <label class="sr-only" for="clientIdInput">Google Client ID</label>
         <input id="clientIdInput" type="text" placeholder="1234567890-abc123.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
@@ -806,16 +855,16 @@
   </div>
 </div>
 
-<div class="app">
-  <header class="topbar">
+<header class="topbar">
+  <div class="topbar-inner">
     <div class="brand">
       <svg class="logo" viewBox="0 0 56 56" aria-hidden="true">
-        <rect width="56" height="56" rx="16" fill="#16224A"/>
+        <rect width="56" height="56" rx="16" fill="#2E1065"/>
         <path d="M10 14h22a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-7 6v-6h-3a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FFD23F"/>
         <path d="M46 24H28a4 4 0 0 0-4 4v9a4 4 0 0 0 4 4h8l7 5v-5h3a4 4 0 0 0 4-4v-9a4 4 0 0 0-4-4z" fill="#4DE0C5" fill-opacity=".95"/>
       </svg>
       <div>
-        <h1>Tutur</h1>
+        <h1>Tutor</h1>
         <div class="tagline">Speak. Translate. Teach.</div>
       </div>
     </div>
@@ -829,7 +878,11 @@
       <div class="who"><b id="userName"></b><span id="userEmail"></span></div>
       <button class="btn" id="signOutBtn">Sign out</button>
     </div>
-  </header>
+  </div>
+</header>
+
+<div class="app">
+
 
   <section class="view active" id="view-talk">
   <p class="sub talk-intro">Speak or type in Indonesian, English, or a mix. Your words appear on the left, and the English translation on the right.</p>
@@ -1147,7 +1200,7 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
     const signup = mode === 'signup';
     nameField.hidden = !signup;
     gateTitle.textContent = signup ? 'Create your account' : 'Sign in';
-    gateSub.textContent = signup ? 'It only takes a moment.' : 'Welcome back to Tutur.';
+    gateSub.textContent = signup ? 'It only takes a moment.' : 'Welcome back to Tutor.';
     submitBtn.textContent = signup ? 'Create account' : 'Sign in';
     switchText.textContent = signup ? 'Already have an account?' : 'New here?';
     switchBtn.textContent = signup ? 'Sign in' : 'Create an account';
@@ -1158,7 +1211,7 @@ const SESSION_HOURS = 24 * 7;       // how long someone stays signed in on this 
   switchBtn.addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
 
   // ---------- Google ----------
-  const CLIENT_KEY = 'tutur-google-client-id';
+  const CLIENT_KEY = 'tutor-google-client-id';
   const CLIENT_ID_PATTERN = /^[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
   let CLIENT_ID = GOOGLE_CLIENT_ID || (function(){ try{ return localStorage.getItem(CLIENT_KEY) || ''; }catch(e){ return ''; } })();
 
