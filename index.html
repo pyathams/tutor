@@ -777,6 +777,55 @@
     .main-nav{ margin-left:0; width:100%; }
     .nav-btn{ flex:1; }
   }
+  /* ===== clean and friendly ===== */
+  .app{ padding-top:30px; }
+  .brand{ cursor:pointer; }
+  .tool-icon{ background:var(--primary-soft); }
+  .tool-card.featured .tool-icon{ background:rgba(255,255,255,.14); }
+
+  #view-helpers .insights{ background:none; border:none; box-shadow:none; padding:0; margin-top:0; }
+  #view-helpers .insights h2{ font-size:clamp(26px, 3.6vw, 38px); font-weight:800; letter-spacing:-0.02em; line-height:1.15; margin:0 0 8px; }
+  #view-helpers .insights > .sub{ font-size:17px; margin-bottom:22px; max-width:62ch; }
+  #view-helpers .tab-panel.active{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:24px clamp(16px, 3vw, 32px) 30px; box-shadow:var(--shadow);
+  }
+  details.ai-settings{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:2px 16px; margin-bottom:24px; }
+  details.ai-settings summary{ font-size:15px; }
+
+  .tool-filters{ gap:14px; margin-bottom:26px; }
+  .tool-search{
+    max-width:640px; background-color:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:14px 18px 14px 46px; font-size:16px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A6286' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:16px center;
+  }
+  .chip{ border:1px solid var(--line); padding:7px 15px; }
+
+  .tool-groups{ display:flex; flex-direction:column; gap:32px; }
+  .tool-group h3{ font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:-0.01em; margin:0 0 12px; }
+  .tool-grid{ grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+  .tool-card{ padding:16px; border-radius:14px; border:1px solid var(--line); gap:14px; }
+  .tool-card-title{ font-size:16px; font-weight:700; margin-bottom:4px; }
+  .tool-card-desc{
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    font-size:14px; line-height:1.45;
+  }
+  .tool-card.featured{ padding:24px; }
+  .tool-card.featured .tool-card-desc{ -webkit-line-clamp:3; }
+  .fav-btn{ opacity:.45; transition:opacity .15s ease; }
+  .tool-card:hover .fav-btn, .fav-btn:focus-visible, .fav-btn[aria-pressed="true"]{ opacity:1; }
+
+  .next-steps{ border:1px solid var(--line); }
+  details.tips{ margin-top:20px; font-size:14px; color:var(--muted); }
+  details.tips summary{ cursor:pointer; font-weight:600; color:var(--text); }
+  details.tips .footnote{ margin-top:8px; }
+
+  @media (max-width:760px){
+    .chips{ flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+    .chip{ flex:none; }
+    .tool-grid{ grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body class="locked">
@@ -878,8 +927,8 @@
       </div>
     </div>
     <nav class="main-nav" aria-label="Main">
-      <button class="nav-btn active" data-view="talk" aria-current="page"><span aria-hidden="true">🎙️</span> Talk &amp; Translate</button>
-      <button class="nav-btn" data-view="helpers" aria-current="false"><span aria-hidden="true">✨</span> AI Helpers</button>
+      <button class="nav-btn active" data-view="helpers" aria-current="page"><span aria-hidden="true">✨</span> AI Helpers</button>
+      <button class="nav-btn" data-view="talk" aria-current="false"><span aria-hidden="true">🎙️</span> Talk &amp; Translate</button>
     </nav>
     <div class="user-chip" id="userChip" hidden>
       <span class="avatar-fallback" id="userAvatarFallback" aria-hidden="true"></span>
@@ -893,7 +942,7 @@
 <div class="app">
 
 
-  <section class="view active" id="view-talk">
+  <section class="view" id="view-talk">
   <p class="sub talk-intro">Speak or type in Indonesian, English, or a mix. Your words appear on the left, and the English translation on the right.</p>
 
   <div class="compat-banner" id="compatBanner"></div>
@@ -961,7 +1010,7 @@
 
     <div id="connSlotTalk">
     <details class="ai-settings" open>
-      <summary><span aria-hidden="true">🔌</span> Connect your AI (needed once)</summary>
+      <summary><span aria-hidden="true">🔌</span> <span id="connSummaryText">Connect your AI (needed once)</span></summary>
 
     <div class="settings-grid">
       <div class="field">
@@ -1054,26 +1103,28 @@
     <div class="insights-footnote">The overview and suggestions are decision-support only — it does not diagnose students, and it is not a substitute for professional judgment. If a transcript contains any indication of risk to a student's safety, escalate through your school's normal safeguarding process regardless of what this tool says.</div>
   </section>
 
+  <details class="tips"><summary>Good to know about speech and translation</summary>
   <div class="footnote" id="footnote">
     Speech recognition runs in your browser (works best in Chrome or Edge) and requires microphone access. Translation auto-detects the language of each sentence and moves through a few free services if one is unreachable or rate-limited, so accuracy on slang or heavy code-switching may still vary — good enough for notes, not for anything legal or medical. Your transcript is saved automatically in this browser as you go, so refreshing the page or closing the tab won't lose it — it'll still be here next time you open this file, until you press "Clear conversation." (It's stored only on this device/browser, not shared anywhere else.)
   </div>
+  </details>
   </div>
   </div>
   </section>
 
-  <section class="view" id="view-helpers">
+  <section class="view active" id="view-helpers">
   <div class="insights">
-    <h2 id="helpersTitle">AI helpers for teachers</h2>
-    <div class="sub">Choose a helper, tell it what you need, and the AI writes it for you. Nothing is sent until you press a Generate button.</div>
+    <h2 id="helpersTitle">What would you like to create today?</h2>
+    <div class="sub">Pick a helper, tell it what you need, and Tutor writes it for you. Nothing is sent until you press Generate.</div>
 
     <div id="connSlotHelpers"></div>
 
     <div id="toolHome">
       <div class="tool-filters">
-        <input id="toolSearch" class="tool-search" type="search" placeholder="Search helpers: email, worksheet, lesson…" aria-label="Search helpers" autocomplete="off">
+        <input id="toolSearch" class="tool-search" type="search" placeholder="Search helpers: email, quiz, lesson, translate…" aria-label="Search helpers" autocomplete="off">
         <div class="chips" id="toolChips" role="group" aria-label="Filter helpers by type"></div>
       </div>
-      <div class="tool-grid" id="tabBar"></div>
+      <div class="tool-groups" id="tabBar"></div>
       <p class="tool-empty" id="toolEmpty" hidden></p>
     </div>
 
@@ -3979,6 +4030,25 @@ Rules:
       `<button type="button" class="chip" data-cat="${c}" aria-pressed="${c === activeCat}">${c}</button>`).join('');
   }
 
+  function cardHtml(k, favs){
+    const m = TOOL_META[k];
+    const on = favs.includes(k);
+    const title = titleOf(k);
+    const star = `<button type="button" class="fav-btn" data-fav="${k}" aria-pressed="${on}" aria-label="${on ? 'Remove from favorites' : 'Add to favorites'}: ${title}" title="${on ? 'Remove from favorites' : 'Add to favorites'}">${on ? '★' : '☆'}</button>`;
+    if(m.featured){
+      return `<div class="tool-card featured" role="button" tabindex="0" data-tab="${k}" style="--c:${m.color}">
+        <span class="tool-icon" aria-hidden="true">${m.icon}</span>
+        <span class="tool-card-text"><span class="tool-card-title">${title}</span><span class="tool-card-desc">${m.desc}</span><span class="featured-cta">Start chatting</span></span>
+        ${star}
+      </div>`;
+    }
+    return `<div class="tool-card" role="button" tabindex="0" data-tab="${k}" style="--c:${m.color}">
+        <span class="tool-icon" aria-hidden="true">${m.icon}</span>
+        <span class="tool-card-text"><span class="tool-card-title">${title}</span><span class="tool-card-desc">${m.desc}</span></span>
+        ${star}
+      </div>`;
+  }
+
   function renderGrid(){
     const q = toolSearch.value.trim().toLowerCase();
     const favs = loadFavs();
@@ -3987,29 +4057,27 @@ Rules:
       const hay = (titleOf(k) + ' ' + m.desc + ' ' + m.category).toLowerCase();
       const catOk = activeCat === 'All' || m.category === activeCat || m.featured;
       return catOk && (!q || hay.includes(q));
-    }).sort((a, b) => {
-      const fa = TOOL_META[a].featured ? 1 : 0, fb = TOOL_META[b].featured ? 1 : 0;
-      return (fb - fa) || (favs.includes(b) ? 1 : 0) - (favs.includes(a) ? 1 : 0) || TOOL_ORDER.indexOf(a) - TOOL_ORDER.indexOf(b);
     });
+    const featured = keys.filter(k => TOOL_META[k].featured);
+    const rest = keys.filter(k => !TOOL_META[k].featured);
+    const grid = list => '<div class="tool-grid">' + list.map(k => cardHtml(k, favs)).join('') + '</div>';
+    const group = (heading, list) => '<section class="tool-group"><h3>' + heading + '</h3>' + grid(list) + '</section>';
 
-    tabBar.innerHTML = keys.map(k => {
-      const m = TOOL_META[k];
-      const on = favs.includes(k);
-      const title = titleOf(k);
-      const star = `<button type="button" class="fav-btn" data-fav="${k}" aria-pressed="${on}" aria-label="${on ? 'Remove from favorites' : 'Add to favorites'}: ${title}" title="${on ? 'Remove from favorites' : 'Add to favorites'}">${on ? '★' : '☆'}</button>`;
-      if(m.featured){
-        return `<div class="tool-card featured" role="button" tabindex="0" data-tab="${k}" style="--c:${m.color}">
-        <span class="tool-icon" aria-hidden="true">${m.icon}</span>
-        <span class="tool-card-text"><span class="tool-card-title">${title}</span><span class="tool-card-desc">${m.desc}</span><span class="featured-cta">Start chatting</span></span>
-        ${star}
-      </div>`;
-      }
-      return `<div class="tool-card" role="button" tabindex="0" data-tab="${k}" style="--c:${m.color}">
-        <span class="tool-icon" aria-hidden="true">${m.icon}</span>
-        <span class="tool-card-text"><span class="tool-card-title">${title}</span><span class="tool-card-desc">${m.desc}</span></span>
-        ${star}
-      </div>`;
-    }).join('');
+    let html = '';
+    if(featured.length){ html += grid(featured); }
+    if(activeCat === 'All' && !q){
+      // The full list is easier to scan when it is grouped.
+      const favKeys = rest.filter(k => favs.includes(k));
+      if(favKeys.length){ html += group('★ Your favorites', favKeys); }
+      CATEGORIES.slice(1).forEach(cat => {
+        const list = rest.filter(k => TOOL_META[k].category === cat && !favs.includes(k));
+        if(list.length){ html += group(cat, list); }
+      });
+    }else if(rest.length){
+      const sorted = rest.slice().sort((a, b) => (favs.includes(b) ? 1 : 0) - (favs.includes(a) ? 1 : 0) || TOOL_ORDER.indexOf(a) - TOOL_ORDER.indexOf(b));
+      html += grid(sorted);
+    }
+    tabBar.innerHTML = html;
 
     if(keys.length){
       toolEmpty.hidden = true;
@@ -4047,7 +4115,7 @@ Rules:
   function updateGreeting(){
     const raw = (document.getElementById('userName').textContent || '').trim();
     const first = raw.includes('@') ? '' : raw.split(/\s+/)[0];
-    document.getElementById('helpersTitle').textContent = first ? 'Hi ' + first + ', what do you need today?' : 'AI helpers for teachers';
+    document.getElementById('helpersTitle').textContent = first ? 'Hi ' + first + ', what would you like to create today?' : 'What would you like to create today?';
   }
 
   // The AI connection box is shared: it lives in whichever section is showing.
@@ -4071,7 +4139,34 @@ Rules:
     const b = e.target.closest('.nav-btn');
     if(b){ showView(b.dataset.view, true); window.scrollTo(0, 0); }
   });
-  showView(location.hash === '#helpers' ? 'helpers' : 'talk', false);
+  showView(location.hash === '#talk' ? 'talk' : 'helpers', false);
+
+  new MutationObserver(updateGreeting).observe(document.getElementById('userName'), { childList: true, characterData: true, subtree: true });
+  updateGreeting();
+
+  document.querySelector('.brand').addEventListener('click', () => {
+    showView('helpers', true);
+    activateTab('home', false);
+    window.scrollTo(0, 0);
+  });
+
+  // ===== one-line summary of the AI connection =====
+  const connSummaryText = document.getElementById('connSummaryText');
+  function updateConnSummary(){
+    const key = providerSelect.value;
+    const preset = PROVIDER_PRESETS[key];
+    const opt = providerSelect.options[providerSelect.selectedIndex];
+    const label = opt ? opt.text.replace(/\s*\(.*\)\s*$/, '') : '';
+    if(preset && preset.needsKey && !apiKeyInput.value.trim()){
+      connSummaryText.textContent = 'Connect your AI (needed once)';
+      return;
+    }
+    const model = modelInput.value.trim();
+    connSummaryText.textContent = 'AI: ' + label + (model ? ' · ' + model : '');
+  }
+  [providerSelect, modelPick].forEach(el => el.addEventListener('change', updateConnSummary));
+  [modelInput, apiKeyInput, endpointInput].forEach(el => el.addEventListener('input', updateConnSummary));
+  updateConnSummary();
 
   // ===== "What next?" shortcuts under the conversation =====
   const nextSteps = document.getElementById('nextSteps');
